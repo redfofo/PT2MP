@@ -1,0 +1,14 @@
+# 依赖与系统文件
+node_modules/
+.DS_Store
+Thumbs.db
+
+# 保存的站点页面可能含 passkey、hash、uid、csrf 等个人信息，切勿提交
+*.webarchive
+*.mhtml
+*.html
+*_files/
+
+# 油猴备份可能含 MoviePilot 地址和 API Token
+*.zip
+tampermonkey-backup*

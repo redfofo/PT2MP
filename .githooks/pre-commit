@@ -1,0 +1,25 @@
+#!/bin/sh
+# 修改脚本时必须提高 @version，否则已安装的用户可能收不到更新。
+SCRIPT=pt2mp.user.js
+
+git diff --cached --quiet -- "$SCRIPT" && exit 0
+git cat-file -e ":$SCRIPT" 2>/dev/null || exit 0 # 本次提交删除了脚本
+
+version_of() {
+    sed -nE 's#^// @version[[:space:]]+([^[:space:]]+).*#\1#p' | head -n 1
+}
+
+new=$(git show ":$SCRIPT" | version_of)
+if ! printf '%s' "$new" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "提交被拦截：$SCRIPT 的 @version 应为 x.y.z 格式，当前为 '$new'" >&2
+    exit 1
+fi
+
+git cat-file -e "HEAD:$SCRIPT" 2>/dev/null || exit 0 # 首次添加脚本
+old=$(git show "HEAD:$SCRIPT" | version_of)
+
+highest=$(printf '%s\n%s\n' "$old" "$new" | sort -V | tail -n 1)
+if [ "$new" = "$old" ] || [ "$highest" != "$new" ]; then
+    echo "提交被拦截：$SCRIPT 已修改，但 @version 没有提高（上一版 $old，当前 $new）" >&2
+    exit 1
+fi
